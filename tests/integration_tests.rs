@@ -20,7 +20,7 @@ fn init_v8() {
 // Test: Basic function with simple args
 // ============================================================================
 
-#[gv8::method]
+#[glue_v8::method]
 fn add(_scope: &mut v8::PinScope, a: f64, b: f64) -> f64 {
     a + b
 }
@@ -52,7 +52,7 @@ fn test_basic_add() {
 // Test: Function with string args
 // ============================================================================
 
-#[gv8::method]
+#[glue_v8::method]
 fn concat(_scope: &mut v8::PinScope, a: String, b: String) -> String {
     format!("{}{}", a, b)
 }
@@ -87,7 +87,7 @@ thread_local! {
     static SIDE_EFFECT: std::cell::Cell<i32> = const { std::cell::Cell::new(0) };
 }
 
-#[gv8::method]
+#[glue_v8::method]
 fn set_value(_scope: &mut v8::PinScope, val: i32) {
     SIDE_EFFECT.with(|v| v.set(val));
 }
@@ -120,7 +120,7 @@ fn test_no_return_value() {
 // Test: Function with Option<T> parameter
 // ============================================================================
 
-#[gv8::method]
+#[glue_v8::method]
 fn greet(_scope: &mut v8::PinScope, name: String, title: Option<String>) -> String {
     match title {
         Some(t) => format!("{} {}", t, name),
@@ -216,7 +216,7 @@ fn test_option_missing_arg() {
 // Test: Function with Result return type
 // ============================================================================
 
-#[gv8::method]
+#[glue_v8::method]
 fn parse_number(_scope: &mut v8::PinScope, input: String) -> Result<f64, String> {
     input.parse::<f64>().map_err(|e| e.to_string())
 }
@@ -271,7 +271,7 @@ fn test_result_err_throws() {
 // Test: Function with V8 callback (Function type)
 // ============================================================================
 
-#[gv8::method]
+#[glue_v8::method]
 fn call_twice(scope: &mut v8::PinScope, callback: v8::Local<v8::Function>, value: f64) -> f64 {
     let recv = v8::undefined(scope).into();
     let arg = v8::Number::new(scope, value).into();
@@ -346,7 +346,7 @@ struct Counter {
     value: std::cell::Cell<i32>,
 }
 
-#[gv8::method(state = Rc<Counter>)]
+#[glue_v8::method(state = Rc<Counter>)]
 fn increment(_scope: &mut v8::PinScope, state: &Rc<Counter>, amount: i32) -> i32 {
     let new_val = state.value.get() + amount;
     state.value.set(new_val);
@@ -390,7 +390,7 @@ fn test_state_from_slot() {
 // Test: Promise with Result
 // ============================================================================
 
-#[gv8::method(promise)]
+#[glue_v8::method(promise)]
 fn async_divide(_scope: &mut v8::PinScope, a: f64, b: f64) -> Result<f64, String> {
     if b == 0.0 {
         Err("Division by zero".to_string())
@@ -479,7 +479,7 @@ fn test_wrong_arg_type() {
 // Test: Uint8Array parameter
 // ============================================================================
 
-#[gv8::method]
+#[glue_v8::method]
 fn sum_bytes(_scope: &mut v8::PinScope, data: v8::Local<v8::Uint8Array>) -> u32 {
     let len = data.byte_length();
     let mut bytes = vec![0u8; len];
@@ -542,7 +542,7 @@ fn test_uint8array_type_error() {
 // Test: Multiple args with different types
 // ============================================================================
 
-#[gv8::method]
+#[glue_v8::method]
 fn format_message(
     _scope: &mut v8::PinScope,
     prefix: String,
@@ -599,7 +599,7 @@ fn test_mixed_args_optional_missing() {
 // Test: Boolean return value
 // ============================================================================
 
-#[gv8::method]
+#[glue_v8::method]
 fn is_even(_scope: &mut v8::PinScope, n: i32) -> bool {
     n % 2 == 0
 }

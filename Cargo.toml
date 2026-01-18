@@ -1,13 +1,13 @@
 [package]
 name = "openworkers-glue-v8"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2024"
 license = "MIT"
 description = "V8 Glue - Rust to V8 binding macros for OpenWorkers"
 repository = "https://github.com/openworkers/glue-v8"
 
 [lib]
-name = "gv8"
+name = "glue_v8"
 proc-macro = true
 
 [dependencies]
