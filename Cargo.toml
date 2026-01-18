@@ -1,6 +1,6 @@
 [package]
 name = "openworkers-glue-v8"
-version = "0.2.0"
+version = "0.3.0"
 edition = "2024"
 license = "MIT"
 description = "V8 Glue - Rust to V8 binding macros for OpenWorkers"
