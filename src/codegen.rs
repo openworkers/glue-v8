@@ -9,7 +9,8 @@ use crate::types::{
 
 /// Generate state extraction code for the slow path.
 ///
-/// Uses V8 context slots to store and retrieve state.
+/// State is extracted from FunctionTemplate data (External containing Rc<T>).
+/// This is the unified approach - same pattern for both fast and non-fast functions.
 pub fn generate_state_extraction(
     has_state: bool,
     state_type: &Option<Type>,
@@ -21,29 +22,29 @@ pub fn generate_state_extraction(
     if let Some(state_ty) = state_type {
         let state_ty_str = quote!(#state_ty).to_string();
 
-        // V8 Context::get_slot<T>() returns Option<Rc<T>>.
-        // So if state_ty is Rc<Counter>, we need to call get_slot::<Counter>()
-        // to get Option<Rc<Counter>>.
-        if let Some(inner_ty) = get_rc_inner_type(state_ty) {
-            quote! {
-                let Some(state) = scope.get_current_context().get_slot::<#inner_ty>() else {
-                    let msg = v8::String::new(scope, concat!("internal error: state not found for ", #state_ty_str)).unwrap();
-                    let err = v8::Exception::error(scope, msg);
-                    scope.throw_exception(err);
-                    return;
-                };
-            }
+        // Determine the inner type (unwrap Rc if present)
+        let inner_ty = if let Some(inner) = get_rc_inner_type(state_ty) {
+            inner.clone()
         } else {
-            // State type is not Rc<T>, try to use it directly
-            // (this might not work with V8's slot API, but let's try)
-            quote! {
-                let Some(state) = scope.get_current_context().get_slot::<#state_ty>() else {
-                    let msg = v8::String::new(scope, concat!("internal error: state not found for ", #state_ty_str)).unwrap();
+            state_ty.clone()
+        };
+
+        // Extract state from function data (External containing Rc<State>)
+        quote! {
+            let state: #state_ty = unsafe {
+                let data = args.data();
+
+                if data.is_undefined() || data.is_null() {
+                    let msg = v8::String::new(scope, concat!("internal error: state data not set for ", #state_ty_str)).unwrap();
                     let err = v8::Exception::error(scope, msg);
                     scope.throw_exception(err);
                     return;
-                };
-            }
+                }
+
+                let external = v8::Local::<v8::External>::try_from(data).unwrap();
+                let ptr = external.value() as *const #inner_ty;
+                std::rc::Rc::clone(&*std::mem::ManuallyDrop::new(std::rc::Rc::from_raw(ptr)))
+            };
         }
     } else {
         quote! {
@@ -234,6 +235,50 @@ pub fn generate_call_and_return(
     } else {
         quote! {
             #fn_name(#(#call_args),*);
+        }
+    }
+}
+
+/// Generate a template helper function for functions with state.
+///
+/// This creates a FunctionTemplate with state passed via External data.
+/// Used for both fast and non-fast functions with state.
+pub fn generate_state_template(
+    wrapper_name: &syn::Ident,
+    template_fn_name: &syn::Ident,
+    state_type: &Type,
+) -> proc_macro2::TokenStream {
+    use crate::types::get_rc_inner_type;
+
+    // Determine the inner type (unwrap Rc if present)
+    let inner_state_type = if let Some(inner) = get_rc_inner_type(state_type) {
+        inner.clone()
+    } else {
+        state_type.clone()
+    };
+
+    quote! {
+        /// Create a FunctionTemplate with state passed via External data.
+        ///
+        /// # Example
+        ///
+        /// ```ignore
+        /// let state = Rc::new(MyState { ... });
+        /// let func = my_fn_v8_template(scope, &state).get_function(scope).unwrap();
+        /// ```
+        pub fn #template_fn_name<'s>(
+            scope: &mut v8::PinScope<'s, '_>,
+            state: &std::rc::Rc<#inner_state_type>,
+        ) -> v8::Local<'s, v8::FunctionTemplate> {
+            // Create External containing raw pointer to inner state
+            // SAFETY: The Rc ensures the state lives long enough, and we use ManuallyDrop
+            // in the wrapper to avoid double-free
+            let ptr = std::rc::Rc::as_ptr(state);
+            let external = v8::External::new(scope, ptr as *mut std::ffi::c_void);
+
+            v8::FunctionTemplate::builder(#wrapper_name)
+                .data(external.into())
+                .build(scope)
         }
     }
 }

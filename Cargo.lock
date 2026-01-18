@@ -399,7 +399,7 @@ dependencies = [
 
 [[package]]
 name = "openworkers-glue-v8"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "openworkers-serde-v8",
  "openworkers-v8",

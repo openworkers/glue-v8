@@ -339,7 +339,7 @@ fn test_callback_type_error() {
 }
 
 // ============================================================================
-// Test: Function with state from context slot
+// Test: Function with state via FunctionTemplate data
 // ============================================================================
 
 struct Counter {
@@ -354,7 +354,7 @@ fn increment(_scope: &mut v8::PinScope, state: &Rc<Counter>, amount: i32) -> i32
 }
 
 #[test]
-fn test_state_from_slot() {
+fn test_state_via_template() {
     init_v8();
     let mut isolate = v8::Isolate::new(v8::CreateParams::default());
     let scope = pin!(v8::HandleScope::new(&mut isolate));
@@ -362,13 +362,14 @@ fn test_state_from_slot() {
     let context = v8::Context::new(&scope, Default::default());
     let scope = &mut v8::ContextScope::new(&mut scope, context);
 
-    // Store state in context slot (matching runtime pattern: store raw, wrap in Rc)
-    let counter = Counter {
+    // Create state and pass via FunctionTemplate data
+    let counter = Rc::new(Counter {
         value: std::cell::Cell::new(10),
-    };
-    scope.get_current_context().set_slot(Rc::new(counter));
+    });
 
-    let func = v8::Function::new(scope, increment_v8).unwrap();
+    let func = increment_v8_template(scope, &counter)
+        .get_function(scope)
+        .unwrap();
     let global = scope.get_current_context().global(scope);
     let key = v8::String::new(scope, "increment").unwrap();
     global.set(scope, key.into(), func.into());
