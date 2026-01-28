@@ -50,6 +50,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "812e12b5285cc515a9c72a5c1d3b6d46a19dac5acfef5265968c166106e31dd3"
 
 [[package]]
+name = "bytes"
+version = "1.11.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b35204fbdc0b3f4446b89fc1ac2cf84a8a68971995d0bf2e925ec7cd960f9cb3"
+
+[[package]]
 name = "calendrical_calculations"
 version = "0.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -399,7 +405,7 @@ dependencies = [
 
 [[package]]
 name = "openworkers-glue-v8"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "openworkers-serde-v8",
  "openworkers-v8",
@@ -411,10 +417,11 @@ dependencies = [
 
 [[package]]
 name = "openworkers-serde-v8"
-version = "0.1.0"
+version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4b205c1e1cfc913a46e9c3dedeb4c53140ea770be8087e28feb30143990b73f5"
+checksum = "120efebdf36512f96697707b1e54f9e418a45f759a6adf2071f6914254c86b98"
 dependencies = [
+ "bytes",
  "num-bigint",
  "openworkers-v8",
  "serde",
