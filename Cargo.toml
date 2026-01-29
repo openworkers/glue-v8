@@ -1,6 +1,6 @@
 [package]
 name = "openworkers-glue-v8"
-version = "0.5.0"
+version = "145.0.0"
 edition = "2024"
 license = "MIT"
 description = "V8 Glue - Rust to V8 binding macros for OpenWorkers"
@@ -17,6 +17,6 @@ syn = { version = "2", features = ["full", "parsing"] }
 
 [dev-dependencies]
 # V8 engine for integration tests (must match runtime features)
-v8 = { package = "openworkers-v8", version = "142", features = ["v8_enable_pointer_compression"] }
-serde_v8 = { package = "openworkers-serde-v8", version = "0.3" }
+v8 = { package = "openworkers-v8", version = "145", features = ["v8_enable_pointer_compression"] }
+serde_v8 = { package = "openworkers-serde-v8", version = "145" }
 serde = { version = "1.0", features = ["derive"] }
