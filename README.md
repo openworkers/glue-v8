@@ -1,4 +1,4 @@
-# gv8 - V8 Glue for OpenWorkers
+# glue_v8 - V8 Glue for OpenWorkers
 
 Proc-macro crate that generates V8 callback boilerplate from Rust functions.
 
@@ -8,31 +8,31 @@ Proc-macro crate that generates V8 callback boilerplate from Rust functions.
 use std::rc::Rc;
 
 // Basic function
-#[gv8::method]
+#[glue_v8::method]
 fn add(_scope: &mut v8::PinScope, a: f64, b: f64) -> f64 {
     a + b
 }
 
 // With state from context slot
-#[gv8::method(state = Rc<MyState>)]
+#[glue_v8::method(state = Rc<MyState>)]
 fn get_count(_scope: &mut v8::PinScope, state: &Rc<MyState>) -> i32 {
     state.count.get()
 }
 
 // With Result (Err throws JS exception)
-#[gv8::method]
+#[glue_v8::method]
 fn parse(_scope: &mut v8::PinScope, input: String) -> Result<f64, String> {
     input.parse().map_err(|e| format!("{}", e))
 }
 
 // With Promise (returns JS Promise)
-#[gv8::method(promise)]
+#[glue_v8::method(promise)]
 fn async_op(_scope: &mut v8::PinScope, val: i32) -> Result<i32, String> {
     if val > 0 { Ok(val * 2) } else { Err("must be positive".into()) }
 }
 
 // Optional parameters
-#[gv8::method]
+#[glue_v8::method]
 fn greet(_scope: &mut v8::PinScope, name: String, title: Option<String>) -> String {
     match title {
         Some(t) => format!("{} {}", t, name),
